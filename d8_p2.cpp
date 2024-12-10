@@ -9,6 +9,7 @@
 #include <tuple>
 #include <numeric>
 #include <unordered_set>
+#include <unordered_map>
 #include <set>
 #include <array>
 
@@ -22,6 +23,7 @@ class Vec2d
 public:
     int x, y;
     constexpr Vec2d(int x, int y) : x(x), y(y) {}
+    Vec2d invers() const { return {-x, -y}; }
 };
 
 constexpr std::array<Vec2d, 4> all_dirs = {
@@ -38,8 +40,13 @@ public:
     bool is_valid() const { return x >= 0 && x < mx && y >= 0 && y < my; }
     Coords operator+(const Vec2d &v) const { return {x + v.x, y + v.y}; }
 
-    bool operator<(const Coords& o) const {
-         return x < o.x || x == o.x && y < o.y;
+    bool operator<(const Coords &o) const
+    {
+        return x < o.x || x == o.x && y < o.y;
+    }
+    Vec2d operator-(const Coords &o)
+    {
+        return {x - o.x, y - o.y};
     }
 
     // bool operator!=(const Coords& o) const {
@@ -59,53 +66,27 @@ public:
     // friend inline std::ostream& operator<<(std::ostream& oss, const Coords& c);
 };
 
-
-set<Coords> fields(const vector<string>& tb, Coords p) {
+set<Coords> fields(const vector<string> &tb, Coords p)
+{
     set<Coords> vis;
     int dir = 0;
-    for(;;) {
+    for (;;)
+    {
         vis.insert(p);
         auto p2 = p + all_dirs[dir];
-        if (!p2.is_valid()) {
-            return vis;
-        } 
-        if (tb[p2.x][p2.y] == '#') {
-            dir += 1;
-            dir %=4;
-        } else {
-            p = p2;
-        }
-
-    }
-}
-
-struct MyHashFunction
-{
-    size_t operator()(const tuple<int , int , int>&x) const
-   {
-       return get<0>(x) * 1000 +  get<1>(x) * 4 + get<2>(x);
-   }
-};
-
-bool stuck(const vector<string>& tb, Coords p) {
-    int dir = 0;
-    unordered_set<tuple<int,int,int>, MyHashFunction> vis;
-    for(;;) {
-        tuple<int, int , int> cs = {p.x, p.y, dir};
-        if (vis.count(cs)) {
-            return true;
-        } 
-        vis.insert(cs);
-        auto p2 = p + all_dirs[dir];
         if (!p2.is_valid())
-            return false;
-        if (tb[p2.x][p2.y] == '#') {
+        {
+            return vis;
+        }
+        if (tb[p2.x][p2.y] == '#')
+        {
             dir += 1;
-            dir %=4;
-        } else {
+            dir %= 4;
+        }
+        else
+        {
             p = p2;
         }
-
     }
 }
 
@@ -122,33 +103,41 @@ int main(int argc, const char **argv)
     {
         tb.push_back(s);
     }
-
-    int dir = 0;
-
     mx = tb.size();
-    my = tb[0].size();
-    Coords p{0,0};
+    my = tb.front().size();
+
+    map<char, vector<Coords>> cats;
+
+    set<Coords> notgood;
+    set<Coords> result;
+
     for (int x = 0; x < mx; ++x)
         for (int y = 0; y < my; ++y)
         {
-            if (tb[x][y] == '^') {
-                p = {x,y};
+            if (tb[x][y] != '.')
+            {
+                cats.insert({tb[x][y], {}}).first->second.push_back({x, y});
+                //notgood.insert({x, y});
             }
         }
-
-    int res = 0;    
-    auto ff = fields(tb, p);
-    for(int x=0; x < mx; ++x) {
-        for(int y=0; y < my; ++y) {
-            if (tb[x][y] == '.') {
-                
-                tb[x][y] = '#';
-                if (stuck(tb,p)) {
-                    res +=1;
+    for (const auto &[k, v] : cats)
+    {
+        for (int i1 = 0; i1 < v.size(); ++i1)
+        {
+            for (int i2 = i1 + 1; i2 < v.size(); ++i2)
+            {
+                auto a = v[i1];
+                auto b = v[i2];
+                auto d = a - b;
+                for(auto cc = a; cc.is_valid(); cc = cc + d) {
+                    result.insert(cc);
                 }
-                tb[x][y] = '.';
+                for(auto cc = b; cc.is_valid(); cc = cc + d.invers()) {
+                    result.insert(cc);
+                }
             }
+        }
     }
 
-    cout << res << endl;
+    cout << result.size() << endl;
 }
