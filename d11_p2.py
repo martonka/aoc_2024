@@ -1,9 +1,4 @@
-import re
-from  functools import cmp_to_key
 from functools import cache
-data = open("input_pre2.txt").read()
-
-nums = list(map( int, data.split()))
 
 @cache
 def f(num, depth):
@@ -17,4 +12,6 @@ def f(num, depth):
          + f(int(x[len(x)//2:].lstrip("0") or "0"), depth -1)
     return f(num * 2024, depth -1)
 
+data = open("input_pre2.txt").read()
+nums = list(map( int, data.split()))
 print(sum([f(x, 75) for x in nums ]))
