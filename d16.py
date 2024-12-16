@@ -1,4 +1,5 @@
 from queue import PriorityQueue
+from collections import deque
 
 data = open("input_pre2.txt").read().strip().split('\n')
 
@@ -54,21 +55,22 @@ print("Road score: ", end_score)
 # Revers bfs on best paths
 # Stats from end point and all optimal directions
 checked = set() # {pos, dir}
+queue = deque()
 for d in all_dirs:
     key= (end_pos, d)
     if best[key] == end_score:
-        queue.put((end_pos, d))
+        queue.append((end_pos, d))
         checked.add((end_pos, d))
 
 # "Reverse" BFS on (pos, dir) pairs that can lead to optimal end 
-while not queue.empty():
-    p,d = queue.get()
+while queue:
+    p,d = queue.pop()
     s = best[(p,d)]
     for p2, d2, s2 in stepsRev(p,d,s):
         key = (p2,d2)
         if key in best and s2 == best[key] and key not in checked:
             checked.add(key)
-            queue.put(key)
+            queue.append(key)
 
 
 # same pos different dir counts as one
