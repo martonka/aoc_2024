@@ -7,10 +7,6 @@ tovels = set(data[0].strip().split(", "))
 def possible(des):
     if len(des) == 0:
         return 1
-    res = 0
-    for t in tovels:
-        if des.endswith(t):
-            res += possible(des[:-len(t)])
-    return res
+    return sum([possible(des[len(t):]) for t in tovels if des.startswith(t)])
      
 print(sum([possible(des) for des in data[2:]]))
